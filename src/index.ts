@@ -1,33 +1,54 @@
 import http from 'http';
 import url from 'url';
-import { addCountry } from './countrys';
-import * as dotenv from 'dotenv';
+import { calculator } from './calculator.js';
 
-dotenv.config();
-
-const PORT = process.env.PORT || '4300';
+const PORT = process.env.PORT || 8000;
 
 const server = http.createServer((req, resp) => {
   switch (req.method) {
     case 'GET':
       if (!req.url) {
-        server.emit('error', new Error('Invalid URL'));
+        server.emit('error', new Error('Error 404'));
+        resp.write(`<p>Error 404</p>`);
         return;
       }
 
       // eslint-disable-next-line no-case-declarations
-      const { pathname } = url.parse(req.url);
-      resp.write('Hello world: estos son tus datos de ' + pathname);
-      break;
-    case 'POST':
-      addCountry({});
-      break;
-    case 'PATCH':
-    case 'DELETE':
-      resp.write('Hello world, de momento no esta implementado ' + req.method);
+      const { pathname, search } = url.parse(req.url);
+
+      if (pathname !== '/calculator') {
+        server.emit('error', new Error('Error - path not found'));
+        resp.write(`<p>Error - path not found</p>`);
+        return;
+      }
+
+      if (pathname === '/calculator') {
+        const urlParams = new URLSearchParams(search!);
+        const num1 = urlParams.get('a');
+        const num2 = urlParams.get('b');
+
+        if (isNaN(Number(num1)) || isNaN(Number(num2))) {
+          server.emit(
+            'error',
+            new Error('Error - el valor introducido no es un número')
+          );
+          resp.write(`<p> Error - el valor introducido no es un número </p>`);
+        } else {
+          const answers = calculator('num1', 'num2');
+          resp.writeHead(800, { 'Content-Type': 'text/html' });
+          resp.write(`<h1>Calculator</h1>
+    <h2>Results:</h2>
+      <p>${num1} + ${num2} = ${answers.sum}</p>
+      <p>${num1} - ${num2} = ${answers.rest}</p>
+      <p>${num1} * ${num2} = ${answers.mult}</p>
+      <p>${num1} / ${num2} = ${answers.div}</p>
+    `);
+        }
+      }
+
       break;
     default:
-      resp.write('Hello world, no conozco el método ' + req.method);
+      resp.write('Método desconocido');
       break;
   }
 
