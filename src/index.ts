@@ -2,7 +2,7 @@ import http from 'http';
 import url from 'url';
 import { calculator } from './calculator.js';
 
-const PORT = process.env.PORT || 4500;
+const PORT = process.env.PORT || 8000;
 
 const server = http.createServer((req, resp) => {
   switch (req.method) {
